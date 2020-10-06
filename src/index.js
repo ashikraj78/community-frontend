@@ -1,17 +1,109 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import React from "react";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+import ReactDOM from "react-dom";
+import "./index.css";
+import * as serviceWorker from "./serviceWorker";
+import Home from "./component/Home";
+import Login from "./component/Login";
+import Signup from "./component/Signup";
+import AddQuestion from "./component/AddQuestion";
+import QuestionDetail from "./component/QuestionDetail";
+import EditQuestion from "./component/EditQuestion";
+import EditAnswer from "./component/EditAnswer";
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+function NotFound() {
+  return <h1>Page not found!</h1>;
+}
+function Private(props) {
+  return (
+    <Switch>
+      <Route path="/" exact>
+        <Home
+          isLoggedIn={props.isLoggedIn}
+          handleLogout={props.handleLogout}
+          userDetails={props.userDetails}
+        />
+      </Route>
+      <Route path="/addQuestion">
+        <AddQuestion
+          isLoggedIn={props.isLoggedIn}
+          handleLogout={props.handleLogout}
+          userDetails={props.userDetails}
+        />
+      </Route>
+      <Route path="/questions/:id">
+        <QuestionDetail
+          isLoggedIn={props.isLoggedIn}
+          handleLogout={props.handleLogout}
+          userDetails={props.userDetails}
+        />
+      </Route>
+      <Route path="/editQuestion/:id">
+        <EditQuestion
+          isLoggedIn={props.isLoggedIn}
+          handleLogout={props.handleLogout}
+          userDetails={props.userDetails}
+        />
+      </Route>
+      <Route path="/editAnswer/:id">
+        <EditAnswer
+          isLoggedIn={props.isLoggedIn}
+          handleLogout={props.handleLogout}
+          userDetails={props.userDetails}
+        />
+      </Route>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
+function Public(props) {
+  return (
+    <Switch>
+      <Route path="/login">
+        <Login updateLoggedInUser={props.updateLoggedInUser} />
+      </Route>
+      <Route path="/signup">
+        <Signup updateLoggedInUser={props.updateLoggedInUser} />
+      </Route>
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+class App extends React.Component {
+  state = {
+    isLoggedIn: false,
+    userDetails: " ",
+  };
+  componentDidMount() {
+    if (localStorage.authTokenFrontendForum) {
+      this.setState({ isLoggedIn: true });
+    }
+  }
+  updateLoggedInUser = (user) => {
+    // console.log(user);
+    this.setState({ isLoggedIn: true, userDetails: user });
+  };
+  handleLogout = () => {
+    this.setState({ isLoggedIn: false });
+    localStorage.removeItem("authTokenFrontendForum");
+  };
+  render() {
+    console.log(this.state.userDetails);
+    return (
+      <BrowserRouter>
+        {this.state.isLoggedIn ? (
+          <Private
+            isLoggedIn={this.state.isLoggedIn}
+            userDetails={this.state.userDetails}
+            handleLogout={this.handleLogout}
+          />
+        ) : (
+          <Public updateLoggedInUser={this.updateLoggedInUser} />
+        )}
+      </BrowserRouter>
+    );
+  }
+}
+ReactDOM.render(<App />, document.getElementById("root"));
 serviceWorker.unregister();
